@@ -3,15 +3,14 @@ package kr.co.gymleco.service.inquiry;
 import kr.co.gymleco.config.GymlecoProperties;
 import kr.co.gymleco.domain.inquiry.Inquiry;
 import kr.co.gymleco.domain.inquiry.InquiryRepository;
-import kr.co.gymleco.domain.product.Product;
-import kr.co.gymleco.domain.product.ProductRepository;
 import kr.co.gymleco.security.crypto.BlindIndexer;
 import kr.co.gymleco.security.crypto.PhoneNumbers;
 import kr.co.gymleco.security.crypto.PiiEncryptor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import kr.co.gymleco.domain.product.Product;
+import kr.co.gymleco.domain.product.ProductRepository;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashSet;
