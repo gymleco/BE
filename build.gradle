@@ -1,0 +1,120 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.0'
+}
+
+group = 'kr.co.gymleco'
+version = '0.0.1-SNAPSHOT'
+description = 'GYMLECO KOREA — 공개 API + 관리자 CMS API'
+
+java {
+    // 이 PC 에는 JDK 17 만 있다. 툴체인을 선언해 두면 Gradle 이
+    // JDK 21 을 찾거나(설치돼 있으면) 자동으로 내려받는다.
+    // Docker 로 빌드하면 이미지가 이미 JDK 21 이라 그대로 통과한다.
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+/*
+ * ── 버전 관리 ─────────────────────────────────────────────────
+ * Spring Boot BOM 을 명시적으로 적용한다.
+ * io.spring.dependency-management 플러그인 대신 Gradle 의 platform 을
+ * 쓰는 편이 버전 해석이 예측 가능하고 플러그인 의존이 하나 줄어든다.
+ *
+ * BOM 이 관리하는 라이브러리에는 버전을 적지 않는다.
+ * 버전을 적은 것들은 BOM 밖에 있는 것뿐이다.
+ */
+ext {
+    springBootVersion = '4.1.0'
+    awsSdkVersion = '2.51.3'
+    htmlSanitizerVersion = '20260313.1'
+    thumbnailatorVersion = '0.4.21'
+}
+
+dependencies {
+    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
+
+    // ── 웹 ──
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // ── 영속성 ──
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    /*
+     * ── 보안 ──
+     *
+     * oauth2-resource-server 를 쓰면 JWT 검증을 Spring Security 가
+     * 표준 방식(Nimbus JOSE)으로 처리한다. jjwt 같은 별도 라이브러리를
+     * 넣지 않는 이유다 — 의존성이 줄고, 토큰 파싱을 직접 짜다 생기는
+     * 실수(alg=none 허용, 만료 미검증 등)를 피할 수 있다.
+     */
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    /*
+     * 저장형 XSS 방어 (기획서 §11 1위 위험).
+     * CMS 에디터 입력을 저장 시점에 허용목록 방식으로 살균한다.
+     */
+    implementation "com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:${htmlSanitizerVersion}"
+
+    /*
+     * 로그인 시도 제한 / 문의 폼 rate limit 용 인메모리 카운터.
+     * 단일 인스턴스 전제. 스케일아웃하면 Redis 로 옮겨야 한다.
+     */
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    // ── 이미지 ──
+    // 업로드 이미지를 재인코딩해 원본에 숨은 페이로드를 제거한다 (§11 2위)
+    implementation "net.coobird:thumbnailator:${thumbnailatorVersion}"
+    implementation 'software.amazon.awssdk:s3'
+
+    // ── 알림 ──
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // ── 운영 ──
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // ── 개발 편의 ──
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // ── 테스트 ──
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('bootJar') {
+    archiveFileName = 'app.jar'
+}
+
+/*
+ * 의존성 취약점 점검은 월 1회 수행한다 (기획서 §13).
+ * OWASP dependency-check 플러그인은 NVD API 키가 필요해
+ * 초기 설정 부담이 있으므로, 우선 GitHub Dependabot 을 켜고
+ * 필요해지면 여기에 추가한다. → .github/dependabot.yml
+ */

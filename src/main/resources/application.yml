@@ -1,0 +1,161 @@
+# ══════════════════════════════════════════════════════════════
+#  gymleco-api — 공통 설정
+#
+#  값은 환경변수로 주입한다. 기본값을 둔 것은 로컬 편의용이며,
+#  시크릿에는 기본값을 두지 않는다 — 설정이 빠지면 조용히 약한 값으로
+#  뜨는 것보다 부팅에 실패하는 편이 안전하다.
+# ══════════════════════════════════════════════════════════════
+
+spring:
+  application:
+    name: gymleco-api
+
+  # ── Java 21 가상 스레드 ──
+  # 문의 접수 → 메일 발송 → ISR 재검증처럼 I/O 대기가 많은 작업이
+  # 플랫폼 스레드를 잡아먹지 않게 한다.
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:gymleco}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 3000
+      # 커넥션을 오래 물고 있는 코드를 조기에 드러낸다
+      leak-detection-threshold: 20000
+
+  jpa:
+    hibernate:
+      # 스키마의 소유자는 Flyway 다. Hibernate 가 손대지 못하게 한다.
+      # update 로 두면 운영 DB 가 코드 변경에 따라 조용히 바뀐다.
+      ddl-auto: validate
+    # ★ 트랜잭션 최적화의 출발점.
+    # 기본값 true 면 뷰 렌더링까지 커넥션을 붙들고 있어
+    # 커넥션 풀이 요청 수만큼 묶인다. 지연 로딩 실수도 가려진다.
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+          time_zone: Asia/Seoul
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        query:
+          in_clause_parameter_padding: true
+          fail_on_pagination_over_collection_fetch: true
+        # 개발 중 N+1 을 눈으로 확인하기 위한 통계. 운영에서는 끈다.
+        generate_statistics: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # 빈 DB 에서 시작한다. 기존 DB 에 붙일 때만 baseline 을 켠다.
+    baseline-on-migrate: false
+    validate-on-migrate: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 30MB
+
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  # nginx / Cloudflare 뒤에 있으므로 X-Forwarded-* 를 신뢰한다.
+  # 이게 없으면 rate limit 이 프록시 IP 하나만 보게 된다.
+  forward-headers-strategy: native
+  error:
+    # 오류 응답에 내부 정보를 흘리지 않는다
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    include-exception: false
+  tomcat:
+    max-http-form-post-size: 2MB
+    max-swallow-size: 10MB
+
+# ── 액추에이터 ──
+# 별도 포트로 분리해 공개 트래픽 경로에서 완전히 뺀다.
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    kr.co.gymleco: INFO
+    # ★ 로그에 비밀번호·토큰·개인정보를 남기지 않는다 (기획서 §13).
+    # 아래를 DEBUG 로 켜면 바인딩 파라미터에 전화번호가 찍힌다.
+    org.hibernate.orm.jdbc.bind: WARN
+    org.springframework.security: INFO
+
+# ══════════════════════════════════════════════════════════════
+#  애플리케이션 고유 설정
+# ══════════════════════════════════════════════════════════════
+gymleco:
+  auth:
+    # HS256 서명 키. 32바이트 이상. openssl rand -hex 32
+    jwt-secret: ${JWT_SECRET}
+    access-ttl-minutes: ${JWT_ACCESS_TTL_MINUTES:30}
+    refresh-ttl-days: ${JWT_REFRESH_TTL_DAYS:7}
+    # 관리자 SPA 와 API 가 같은 오리진이므로 비워 두면 host-only 쿠키가 된다.
+    cookie-domain: ${AUTH_COOKIE_DOMAIN:}
+    cookie-secure: ${AUTH_COOKIE_SECURE:true}
+    # 계정 전면 잠금은 관리자를 상시 차단하는 DoS 가 되므로 IP 를 1차로 둔다.
+    max-attempts-per-ip: ${LOGIN_MAX_ATTEMPTS_PER_IP:5}
+    ip-lock-minutes: ${LOGIN_IP_LOCK_MINUTES:15}
+
+  pii:
+    # 전화번호 AES-256-GCM 암호화 키 (base64, 32바이트)
+    encryption-key: ${PII_ENCRYPTION_KEY}
+    # 검색용 블라인드 인덱스 HMAC 키. 암호화 키와 달라야 한다.
+    blind-index-key: ${PII_BLIND_INDEX_KEY}
+
+  inquiry:
+    retention-days: ${INQUIRY_RETENTION_DAYS:365}
+    # 문의 폼 남용 방지 (§11 5위)
+    rate-limit-per-hour: ${INQUIRY_RATE_LIMIT_PER_HOUR:5}
+    notify-to: ${INQUIRY_NOTIFY_TO:}
+
+  cors:
+    # 와일드카드 금지. 쉼표 구분 화이트리스트.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+  revalidate:
+    # CMS 발행 후 Next.js 정적 페이지를 갱신한다 (docs/OPEN-DECISIONS.md D-3)
+    url: ${REVALIDATE_URL:}
+    token: ${REVALIDATE_TOKEN:}
+
+  storage:
+    bucket: ${S3_BUCKET:}
+    region: ${AWS_REGION:ap-northeast-2}
+    cdn-base-url: ${CDN_BASE_URL:}
+    # 업로드 허용 형식. 확장자가 아니라 실제 시그니처로 검증한다.
+    allowed-image-types: image/jpeg,image/png,image/webp
+    max-image-bytes: 10485760
