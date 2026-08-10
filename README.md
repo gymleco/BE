@@ -1,4 +1,4 @@
-# api — 백엔드 / CMS (Spring Boot 3 / Java 17)
+# api — 백엔드 / CMS (Spring Boot 3 / Java 21)
 
 Phase 2 에서 여기에 Spring Boot 프로젝트를 스캐폴딩한다. 현재는 비어 있다.
 
