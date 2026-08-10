@@ -3,7 +3,6 @@ package kr.co.gymleco.domain.inquiry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,4 +19,5 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     long countByCreatedAtAfter(Instant since);
     @Query("SELECT COUNT(i) FROM Inquiry i WHERE i.sourceIp = :ip AND i.createdAt > :since")
     long countRecentByIp(@Param("ip") String ip, @Param("since") Instant since);
+    
 }

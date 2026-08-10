@@ -29,6 +29,9 @@ public class Inquiry {
     private String region;
     @Column(nullable = false, columnDefinition = "text")
     private String message = "";
+    /** 평수·천장고 등 공간 조건. 자유 입력이며 개인정보가 아니다. */
+    @Column(name = "space_info", length = 200)
+    private String spaceInfo;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private InquiryStatus status = InquiryStatus.NEW;
@@ -76,19 +79,21 @@ public class Inquiry {
         inquiry.purgeAt = consentAt.plus(retention);
         return inquiry;
     }
-    public void applyOptionalFields(String email, String company, String region,
-                                    String message) {
+    public void applyOptionalFields(String email, String company, String region, String spaceInfo, String message){
         this.email = blankToNull(email);
         this.company = blankToNull(company);
         this.region = blankToNull(region);
+        this.spaceInfo = blankToNull(spaceInfo);
         this.message = message == null ? "" : message;
     }
     public void applyMarketingConsent(Instant agreedAt) {
         this.marketingConsentAt = agreedAt;
     }
-    public void applyRequestContext(String sourceIp, String userAgent) {
+    public void applyRequestContext(String sourceIp, String userAgent){
         this.sourceIp = sourceIp;
-        this.userAgent = userAgent;
+        this.userAgent = (userAgent != null && userAgent.length() > 400)
+            ? userAgent.substring(0, 400)
+            : userAgent;
     }
     public void linkProducts(Set<Long> ids) {
         this.productIds.clear();
@@ -138,5 +143,5 @@ public class Inquiry {
     public Instant getPurgeAt()            { return purgeAt; }
     public Set<Long> getProductIds()       { return Set.copyOf(productIds); }
     public Instant getCreatedAt()          { return createdAt; }
-
+    public String getSpaceInfo()           { return spaceInfo; }
 }

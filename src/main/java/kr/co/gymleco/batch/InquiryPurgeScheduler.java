@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
 //개인정보 자동 파기 , 개인정보처리 방침에 "처리 완료 후 1년"
 @Component
 public class InquiryPurgeScheduler {

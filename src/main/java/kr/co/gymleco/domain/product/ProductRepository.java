@@ -14,4 +14,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findBySlugAndVisibleTrue(String slug);
     Optional<Product> findBySlug(String slug);
     boolean existsBySlug(String slug);
+    List<Product> findBySlugInAndVisibleTrue(java.util.Collection<String> slugs);
 }
