@@ -20,7 +20,7 @@ COPY --chown=gradle:gradle src ./src
 RUN gradle --no-daemon clean bootJar -x test
 
 # ── 2단계: 실행 ────────────────────────────────────────────────
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:25-jre-alpine AS runtime
 
 # root 로 돌리지 않는다. 컨테이너가 뚫려도 권한이 남지 않게 한다.
 RUN addgroup -S app && adduser -S -G app app
