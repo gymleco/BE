@@ -1,6 +1,6 @@
 # CLAUDE.md — gymleco BE
 
-Spring Boot 4.1.0 / Java 21 API 서버. 프론트는 별도 저장소(`gymleco-fe`).
+Spring Boot 4.1.0 / Java 21 API 서버. 프론트는 별도 저장소(`FE`).
 
 ---
 
@@ -76,5 +76,5 @@ CI 가 모든 마이그레이션을 실제 PostgreSQL 에 적용해 검증한다
 
 ## 문서
 
-설계 문서는 org 의 [`.github`](https://github.com/GYMLECO-KOREA/.github) 저장소에 있다.
+설계 문서는 org 의 [`.github`](https://github.com/gymleco/.github) 저장소에 있다.
 `docs/03-database.md` (ERD·개인정보 처리), `docs/SECURITY-CHECKLIST.md` 를 참고한다.

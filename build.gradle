@@ -43,7 +43,20 @@ ext {
 }
 
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    /*
+     * ★ BOM 은 설정(configuration)마다 따로 적용해야 한다.
+     *
+     * implementation 에만 걸면 annotationProcessor·developmentOnly 처럼
+     * implementation 을 상속하지 않는 설정에는 닿지 않는다.
+     * 그러면 버전이 비어 있는 채로 해석을 시도하다 실패한다
+     *   Could not find org.springframework.boot:spring-boot-configuration-processor:
+     *
+     * testImplementation 은 implementation 을 상속하므로 자동으로 따라온다.
+     */
+    implementation        platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    annotationProcessor   platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    developmentOnly       platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+
     implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
 
     // ── 웹 ──

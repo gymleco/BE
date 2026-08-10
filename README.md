@@ -31,3 +31,4 @@ Phase 2 에서 여기에 Spring Boot 프로젝트를 스캐폴딩한다. 현재�
 ```bash
 cp .env.example .env
 ```
+# BE
