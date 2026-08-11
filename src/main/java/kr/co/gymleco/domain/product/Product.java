@@ -101,6 +101,24 @@ public class Product {
         image.assignTo(this);
         touch();
     }
+    /** 대표 이미지. 업로드 파이프라인이 만든 스토리지 키를 받는다. */
+    public void changeThumbnail(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
+        touch();
+    }
+
+    /**
+     * 카테고리 변경.
+     *
+     * type 은 바꾸지 않는다 — 기구를 부품으로 바꾸면 치수 제약이
+     * 뒤집히고, 이미 걸린 문의·중고 연결의 의미가 달라진다.
+     * 종류를 잘못 만들었으면 새로 등록하고 기존 것은 비공개로 둔다.
+     */
+    public void changeCategory(ProductCategory category) {
+        this.category = category;
+        touch();
+    }
+
     @PreUpdate
     void onUpdate() {
         this.updatedAt = Instant.now();
@@ -124,5 +142,7 @@ public class Product {
     public String getThumbnailKey()     { return thumbnailKey; }
     public int getSortOrder()           { return sortOrder; }
     public boolean isVisible()          { return visible; }
+    public Instant getUpdatedAt()       { return updatedAt; }
+    public Instant getCreatedAt()       { return createdAt; }
     public List<ProductImage> getImages() { return List.copyOf(images); }
 }

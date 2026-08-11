@@ -3,7 +3,9 @@ package kr.co.gymleco.security.jwt;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.stereotype.Component;
 
+@Component
 public class CookieBearerTokenResolver implements BearerTokenResolver{
     public static final String ACCESS_TOKEN_COOKIE = "gl_at";
     @Override

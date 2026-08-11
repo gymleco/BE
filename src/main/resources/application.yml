@@ -58,6 +58,23 @@ spring:
     baseline-on-migrate: false
     validate-on-migrate: true
 
+  # ── Jackson ──
+  # Boot 4 는 Jackson 3 을 쓴다. Jackson 2 와 기본값이 다르다.
+  #
+  # ★ fail-on-null-for-primitives
+  #   Jackson 3 은 기본이 true 다. record 는 생성자에 모든 인자를 넘겨야
+  #   하므로, 요청에서 boolean 필드를 하나라도 생략하면
+  #   "Cannot map null into type boolean" 으로 400 이 난다.
+  #   marketingConsent 를 안 보냈다는 이유로 문의 전체가 거부된다.
+  #
+  #   false 로 두면 생략된 boolean 이 false 가 된다 — 의미상으로도 이쪽이 맞다.
+  #   "동의 필드가 없다" = "동의하지 않았다" 이고,
+  #   그러면 @AssertTrue(privacyConsent) 가 제대로 거부한다.
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+      fail-on-unknown-properties: false
+
   servlet:
     multipart:
       max-file-size: 10MB
@@ -105,6 +122,18 @@ management:
       show-details: never
       probes:
         enabled: true
+  health:
+    # ★ 메일을 헬스체크에서 뺀다.
+    #
+    # 기본 인디케이터는 SMTP 에 실제로 접속을 시도한다. 메일 설정이
+    # 없거나 SMTP 가 잠깐 죽으면 앱 전체가 DOWN 으로 보고되고,
+    # 오케스트레이터가 멀쩡한 컨테이너를 재시작한다.
+    #
+    # 문의 알림은 실패해도 접수를 막지 않도록 설계했다(커밋 후 비동기).
+    # 그 판단과 헬스체크가 어긋나면 안 된다 — 메일은 부가 기능이지
+    # 서비스 가용성의 조건이 아니다.
+    mail:
+      enabled: false
 
 logging:
   level:
@@ -137,6 +166,16 @@ gymleco:
     # 검색용 블라인드 인덱스 HMAC 키. 암호화 키와 달라야 한다.
     blind-index-key: ${PII_BLIND_INDEX_KEY}
 
+  admin:
+    # 최초 관리자 계정. 계정이 하나도 없을 때만 1회 생성된다.
+    #
+    # ★ 마이그레이션 SQL 에 비밀번호 해시를 넣지 않는 이유 —
+    #   마이그레이션은 git 에 들어간다. 개발용으로 넣은 해시가
+    #   그대로 운영에 딸려 들어가는 사고가 흔하다.
+    #   환경변수로 주입하면 저장소에 남지 않는다.
+    bootstrap-username: ${ADMIN_BOOTSTRAP_USERNAME:}
+    bootstrap-password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+
   inquiry:
     retention-days: ${INQUIRY_RETENTION_DAYS:365}
     # 문의 폼 남용 방지 (§11 5위)
@@ -155,6 +194,11 @@ gymleco:
   storage:
     bucket: ${S3_BUCKET:}
     region: ${AWS_REGION:ap-northeast-2}
+    # S3 호환 엔드포인트. 비우면 실제 AWS S3 를 쓴다.
+    # 로컬에서는 MinIO 를 가리킨다 — 코드는 그대로 두고 주소만 바꾼다.
+    endpoint: ${S3_ENDPOINT:}
+    access-key: ${S3_ACCESS_KEY:}
+    secret-key: ${S3_SECRET_KEY:}
     cdn-base-url: ${CDN_BASE_URL:}
     # 업로드 허용 형식. 확장자가 아니라 실제 시그니처로 검증한다.
     allowed-image-types: image/jpeg,image/png,image/webp

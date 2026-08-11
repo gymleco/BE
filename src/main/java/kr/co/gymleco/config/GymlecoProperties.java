@@ -15,6 +15,7 @@ import java.util.List;
 public record GymlecoProperties(
     @NotNull @Valid Auth auth,
     @NotNull @Valid Pii pii,
+    @NotNull Admin admin,
     @NotNull @Valid Inquiry inquiry,
     @NotNull @Valid Cors cors,
     @Valid Revalidate revalidate,
@@ -76,4 +77,9 @@ public record GymlecoProperties(
         List<String> allowedImageTypes,
         long maxImageBytes
     ) {}
+    public record Admin(String bootstrapUsername, String bootstrapPassword){
+        public boolean isConfigured(){
+            return bootstrapUsername != null && !bootstrapUsername.isBlank() && bootstrapPassword != null && !bootstrapPassword.isBlank();
+        }
+    }
 }

@@ -26,7 +26,7 @@ public class AdminRefreshToken {
     private AdminRefreshToken replacedBy;
     @Column(name = "user_agent", length = 400)
     private String userAgent;
-    @Column(columnDefinition = "inet")
+    @Column(length = 45)
     private String ip;
     protected AdminRefreshToken() {
     }

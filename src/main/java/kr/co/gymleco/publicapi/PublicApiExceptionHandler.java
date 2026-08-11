@@ -1,5 +1,6 @@
 package kr.co.gymleco.publicapi;
 
+import kr.co.gymleco.service.admin.ProductNotFoundException;
 import kr.co.gymleco.service.inquiry.RateLimitExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -35,5 +36,10 @@ public class PublicApiExceptionHandler {
     public Map<String, String> invalid() {
         return Map.of("code", "VALIDATION_FAILED",
                       "message", "필수 항목을 확인해 주세요.");
+    }
+    @ExceptionHandler(ProductNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> notFound(){
+        return Map.of("code", "NOT_FOUND", "message", "대상을 찾을 수 없습니다.");
     }
 }

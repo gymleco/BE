@@ -1,5 +1,6 @@
 package kr.co.gymleco.security.config;
 
+import jakarta.servlet.DispatcherType;
 import kr.co.gymleco.config.GymlecoProperties;
 import kr.co.gymleco.security.jwt.CookieBearerTokenResolver;
 import kr.co.gymleco.security.jwt.JwtTokenService;
@@ -114,16 +115,51 @@ public class SecurityConfig {
         return http.build();
     }
     /**
+     * ── 액추에이터 ──────────────────────────────────────────
+     *
+     * 8081 내부 전용 포트에 있지만 Spring Security 는 포트를 구분하지
+     * 않으므로 아래 denyAll 에 걸린다. 헬스체크만 열고 나머지는 계속 막는다.
+     *
+     * 노출 자체는 application.yml 의 exposure.include 로 health 만 켜져 있다.
+     * 여기서 한 겹 더 좁힌다.
+     */
+    @Bean
+    @Order(0)
+    SecurityFilterChain actuatorChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher("/actuator/**")
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                .anyRequest().denyAll())
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        return http.build();
+    }
+
+    /**
      * ── 마지막: 그 외 모든 경로를 막는다 ────────────────────
      *
      * 기본을 "차단"으로 둔다. 새 엔드포인트를 만들면서 체인 등록을
      * 잊어도 열리지 않는다.
+     *
+     * ★ 단, 프레임워크 내부 디스패치는 예외로 둬야 한다.
+     *
+     *   예외가 발생하면 Spring 은 /error 로 포워드하는데, 그 포워드가
+     *   필터 체인을 다시 탄다. denyAll 이 그것까지 막으면 400 이든 500 이든
+     *   전부 403 으로 덮여 나온다.
+     *
+     *   실제로 문의 접수의 검증 실패가 403 으로 바뀌어 원인 파악을
+     *   가로막았다. 오류를 감추는 보안 설정은 보안이 아니라 장애다.
      */
     @Bean
     @Order(Ordered.LOWEST_PRECEDENCE)
     SecurityFilterChain denyRestChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth.anyRequest().denyAll())
+            .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD)
+                    .permitAll()
+                .anyRequest().denyAll())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

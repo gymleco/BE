@@ -25,7 +25,10 @@ services:
       TZ: Asia/Seoul
     ports:
       # 로컬에서 DBeaver 등으로 붙기 위한 것. 운영에는 두지 않는다.
-      - "127.0.0.1:5432:5432"
+      #
+      # 호스트 포트를 환경변수로 뺀다 — 개발 PC 마다 이미 쓰고 있는
+      # 포트가 다르다. 기본값이 충돌하면 .env 에서 바꾸면 된다.
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
@@ -52,15 +55,70 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY}
       PII_BLIND_INDEX_KEY: ${PII_BLIND_INDEX_KEY}
+      ADMIN_BOOTSTRAP_USERNAME: ${ADMIN_BOOTSTRAP_USERNAME:-}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_BUCKET: ${S3_BUCKET:-gymleco-images}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-gymleco-local}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-gymleco-local-secret}
+      AWS_REGION: ${AWS_REGION:-ap-northeast-2}
+      CDN_BASE_URL: ${CDN_BASE_URL:-http://127.0.0.1:19000/gymleco-images}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
       REVALIDATE_URL: ${REVALIDATE_URL:-}
       REVALIDATE_TOKEN: ${REVALIDATE_TOKEN:-}
       TZ: Asia/Seoul
+      # ── 진단 스위치 ──
+      # 평소에는 꺼져 있고, 문제를 좇을 때만 .env 에서 켠다.
+      # 별도 컨테이너를 띄워 디버깅하면 환경이 미묘하게 달라져
+      # 재현되지 않거나 다른 증상이 나온다. 같은 컨테이너에서 봐야 한다.
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: ${LOG_LEVEL_WEB:-INFO}
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: ${LOG_LEVEL_SECURITY:-INFO}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${HEALTH_SHOW_DETAILS:-never}
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:${API_HOST_PORT:-8080}:8080"
       # 액추에이터는 내부 전용. 로컬에서만 열어 본다.
-      - "127.0.0.1:8081:8081"
+      - "127.0.0.1:${MANAGEMENT_HOST_PORT:-8081}:8081"
+
+  # ── 로컬 오브젝트 스토리지 ────────────────────────────────
+  # 운영의 S3/R2 를 대신한다. API 가 동일하므로 코드는 그대로 둔 채
+  # 엔드포인트만 바꿔 끼운다.
+  #
+  # ★ 앱 서버가 이미지를 서빙하지 않는다는 원칙을 로컬에서도 지킨다.
+  #   업로드된 파일이 앱과 같은 프로세스에서 나가면, 악성 파일이
+  #   올라갔을 때 실행될 여지가 생긴다.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-gymleco-local}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-gymleco-local-secret}
+    ports:
+      - "127.0.0.1:${MINIO_HOST_PORT:-19000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-19001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 버킷 생성 1회용. 완료 후 종료된다.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-gymleco-local} ${S3_SECRET_KEY:-gymleco-local-secret};
+      mc mb --ignore-existing local/${S3_BUCKET:-gymleco-images};
+      mc anonymous set download local/${S3_BUCKET:-gymleco-images};
+      echo 'bucket ready';
+      "
 
 volumes:
   db-data:
+  minio-data:

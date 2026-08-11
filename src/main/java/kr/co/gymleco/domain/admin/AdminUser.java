@@ -27,7 +27,7 @@ public class AdminUser {
     private boolean totpEnabled = false;
     @Column(name = "last_login_at")
     private Instant lastLoginAt;
-    @Column(name = "last_login_ip", columnDefinition = "inet")
+    @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
     @Column(name = "password_changed_at", nullable = false)
     private Instant passwordChangedAt = Instant.now();

@@ -43,7 +43,7 @@ public class Inquiry {
     private Instant marketingConsentAt;
     @Column(name = "purge_at", nullable =false)
     private Instant purgeAt;
-    @Column(name = "source_ip", columnDefinition = "inet")
+    @Column(name = "source_ip", length = 45)
     private String sourceIp;
     @Column(name = "user_agent", length = 400)
     private String userAgent;

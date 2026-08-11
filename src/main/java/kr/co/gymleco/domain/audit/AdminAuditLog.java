@@ -24,7 +24,7 @@ public class AdminAuditLog {
     private String targetId;
     @Column(nullable = false, columnDefinition = "text")
     private String detail = "";
-    @Column(columnDefinition = "inet")
+    @Column(length = 45)
     private String ip;
     @Column(name = "user_agent", length = 400)
     private String userAgent;

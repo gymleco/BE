@@ -65,6 +65,21 @@ dependencies {
 
     // ── 영속성 ──
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    /*
+     * ★ spring-boot-flyway 가 반드시 필요하다.
+     *
+     * Boot 4 는 자동설정을 기술별 모듈로 쪼갰다.
+     * Boot 3 에서는 flyway-core 만 있으면 spring-boot-autoconfigure 가
+     * 알아서 잡아줬지만, Boot 4 에서는 이 모듈이 없으면 Flyway 가
+     * **아무 오류 없이 그냥 실행되지 않는다.**
+     *
+     * 증상: 기동 로그에 flyway 관련 줄이 한 줄도 없고,
+     *       flyway_schema_history 테이블조차 생기지 않으며,
+     *       Hibernate 가 "missing table" 로 뒤늦게 실패한다.
+     *       원인이 Flyway 라는 단서가 어디에도 없다.
+     */
+    implementation 'org.springframework.boot:spring-boot-flyway'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
