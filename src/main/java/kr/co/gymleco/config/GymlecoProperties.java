@@ -74,6 +74,17 @@ public record GymlecoProperties(
         String bucket,
         String region,
         String cdnBaseUrl,
+        /*
+         * S3 호환 엔드포인트. 비우면 실제 AWS S3 를 쓴다.
+         * 로컬은 MinIO 를 가리킨다 — 코드는 그대로 두고 주소만 바꾼다.
+         */
+        String endpoint,
+        /*
+         * 로컬 개발에서만 채운다.
+         * 운영 EC2 는 IAM 역할로 접근하고 서버에 키를 두지 않는다.
+         */
+        String accessKey,
+        String secretKey,
         List<String> allowedImageTypes,
         long maxImageBytes
     ) {}

@@ -42,4 +42,9 @@ public class PublicApiExceptionHandler {
     public Map<String, String> notFound(){
         return Map.of("code", "NOT_FOUND", "message", "대상을 찾을 수 없습니다.");
     }
+    @ExceptionHandler(UsedItemNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> usedItemNotFound(UsedItemNotFoundException e){
+        return Map.of("code", "NOT_FOUND");
+    }
 }

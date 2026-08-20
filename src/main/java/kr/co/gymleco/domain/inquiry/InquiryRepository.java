@@ -19,5 +19,24 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     long countByCreatedAtAfter(Instant since);
     @Query("SELECT COUNT(i) FROM Inquiry i WHERE i.sourceIp = :ip AND i.createdAt > :since")
     long countRecentByIp(@Param("ip") String ip, @Param("since") Instant since);
-    
+
+    @Query("""
+        SELECT i FROM Inquiry i
+        WHERE i.createdAt >= :from AND i.createdAt < :to
+        ORDER BY i.createdAt DESC
+        """)
+    Page<Inquiry> findInRange(@Param("from") Instant from,
+                              @Param("to") Instant to,
+                              Pageable pageable);
+
+    @Query("""
+        SELECT i FROM Inquiry i
+        WHERE i.status = :status
+          AND i.createdAt >= :from AND i.createdAt < :to
+        ORDER BY i.createdAt DESC
+        """)
+    Page<Inquiry> findInRangeByStatus(@Param("status") InquiryStatus status,
+                                      @Param("from") Instant from,
+                                      @Param("to") Instant to,
+                                      Pageable pageable);
 }
