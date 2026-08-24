@@ -37,7 +37,7 @@ repositories {
  */
 ext {
     springBootVersion = '4.1.0'
-    awsSdkVersion = '2.51.3'
+    awsSdkVersion = '2.54.1'
     htmlSanitizerVersion = '20260313.1'
     thumbnailatorVersion = '0.4.21'
 }
