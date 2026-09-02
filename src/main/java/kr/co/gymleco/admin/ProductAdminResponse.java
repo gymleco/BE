@@ -21,6 +21,7 @@ public record ProductAdminResponse(
     Integer heightMm,
     BigDecimal weightKg,
     String thumbnailKey,
+    String cutoutKey,
     int sortOrder,
     boolean visible,
     List<String> imageKeys,
@@ -31,7 +32,7 @@ public record ProductAdminResponse(
             p.getId(), p.getSlug(), p.getType().name(), p.getCategory().name(),
             p.getNameKo(), p.getNameEn(), p.getSummary(), p.getDescription(),
             p.getFootprintM2(), p.getWidthMm(), p.getDepthMm(), p.getHeightMm(),
-            p.getWeightKg(), p.getThumbnailKey(), p.getSortOrder(), p.isVisible(),
+            p.getWeightKg(), p.getThumbnailKey(),p.getCutoutKey(), p.getSortOrder(), p.isVisible(),
             p.getImages().stream().map(i -> i.getImageKey()).toList(),
             p.getUpdatedAt());
     }

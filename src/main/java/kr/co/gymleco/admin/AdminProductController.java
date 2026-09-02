@@ -65,8 +65,11 @@ public class AdminProductController {
                            @RequestBody Map<String, Boolean> body,
                            @AuthenticationPrincipal Jwt jwt,
                            HttpServletRequest http) {
-        service.changeVisibility(id, Boolean.TRUE.equals(body.get("visible")),
-            actor(jwt), http.getRemoteAddr());
+        Boolean visible = body.get("visible");
+        // 키가 없거나 오타("visable")면 Boolean.TRUE.equals(null) 이 false 가 돼서
+        // "숨김" 이 조용히 실행된다. 안 보내면 못 알아들었다고 말해야 한다.
+        if (visible == null) throw new IllegalArgumentException("visible 값이 필요합니다.");
+        service.changeVisibility(id, visible, actor(jwt), http.getRemoteAddr());
     }
 
     /** 드래그로 순서를 바꾼 결과를 한 번에 받는다. { "12": 0, "7": 1, ... } */
