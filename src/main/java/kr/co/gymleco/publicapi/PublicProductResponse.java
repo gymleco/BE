@@ -29,6 +29,7 @@ public record PublicProductResponse(
     Integer heightMm,
     BigDecimal weightKg,
     String thumbnailKey,
+    String cutoutKey,
     List<String> imageKeys
 ) {
     /** 목록용 — 설명과 갤러리를 뺀다. 목록에서 쓰지 않는 데이터를 보내지 않는다. */
@@ -37,7 +38,7 @@ public record PublicProductResponse(
             p.getSlug(), p.getType().name(), p.getCategory().name(),
             p.getNameKo(), p.getNameEn(), p.getSummary(), null,
             p.getFootprintM2(), p.getWidthMm(), p.getDepthMm(), p.getHeightMm(),
-            p.getWeightKg(), p.getThumbnailKey(), List.of());
+            p.getWeightKg(), p.getThumbnailKey(),p.getCutoutKey(), List.of());
     }
 
     public static PublicProductResponse detail(Product p) {
@@ -45,7 +46,7 @@ public record PublicProductResponse(
             p.getSlug(), p.getType().name(), p.getCategory().name(),
             p.getNameKo(), p.getNameEn(), p.getSummary(), p.getDescription(),
             p.getFootprintM2(), p.getWidthMm(), p.getDepthMm(), p.getHeightMm(),
-            p.getWeightKg(), p.getThumbnailKey(),
+            p.getWeightKg(), p.getThumbnailKey(), p.getCutoutKey(),
             p.getImages().stream().map(i -> i.getImageKey()).toList());
     }
 }

@@ -36,5 +36,25 @@ public enum AuditAction {
     // ── 계정 ──
     ADMIN_CREATED,
     ADMIN_PASSWORD_CHANGED,
-    ADMIN_DISABLED
+    ADMIN_DISABLED,
+
+    // ── 중고 ──
+    USED_CREATED,
+    USED_UPDATED,
+    USED_DELETED,
+    USED_STATUS_CHANGED,
+    USED_VISIBILITY_CHANGED,
+
+    // ── 고객센터 ──
+    FAQ_CREATED,
+    FAQ_UPDATED,
+    FAQ_DELETED,
+    NOTICE_CREATED,
+    NOTICE_UPDATED,
+    NOTICE_DELETED,
+    // ── 배너 · 섹션 이미지 ──
+    BANNER_CREATED,
+    BANNER_UPDATED,
+    BANNER_DELETED,
+    SECTION_MEDIA_UPDATED,
 }

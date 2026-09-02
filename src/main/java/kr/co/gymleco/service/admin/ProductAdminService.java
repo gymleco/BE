@@ -183,6 +183,7 @@ public class ProductAdminService {
             body.heightMm(), body.weightKg());
 
         product.changeThumbnail(body.thumbnailKey());
+        product.changeCutout(body.cutoutKey());
     }
 
     private Product find(Long id) {

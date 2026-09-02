@@ -30,4 +30,10 @@ public interface UsedItemRepository extends JpaRepository<UsedItem, Long> {
 
     /** 관리자 목록 — 비공개·판매완료 포함 */
     List<UsedItem> findAllByOrderBySortOrderAscIdAsc();
+
+    //관리자 상세
+    @EntityGraph(attributePaths = "images")
+    Optional<UsedItem> findWithImagesById(Long id);
+    // 관리 목록 - 상태로 거름
+    List<UsedItem> findByStatusOrderBySortOrderAscIdAsc(UsedStatus status);
 }

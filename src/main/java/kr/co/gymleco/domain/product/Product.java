@@ -38,6 +38,8 @@ public class Product {
     private BigDecimal weightKg;
     @Column(name = "thumbnail_key", length = 255)
     private String thumbnailKey;
+    @Column(name = "cutout_key", length = 255)
+    private String cutoutKey;
     @Column(name = "sort_order", nullable = false)
     private int sortOrder = 0;
     @Column(nullable = false)
@@ -101,6 +103,10 @@ public class Product {
         image.assignTo(this);
         touch();
     }
+    public void changeCutout(String cutoutKey){
+        this.cutoutKey = cutoutKey;
+        touch();
+    }
     /** 대표 이미지. 업로드 파이프라인이 만든 스토리지 키를 받는다. */
     public void changeThumbnail(String thumbnailKey) {
         this.thumbnailKey = thumbnailKey;
@@ -134,6 +140,7 @@ public class Product {
     public String getNameEn()           { return nameEn; }
     public String getSummary()          { return summary; }
     public String getDescription()      { return description; }
+    public String getCutoutKey()        { return cutoutKey; }
     public BigDecimal getFootprintM2()  { return footprintM2; }
     public Integer getWidthMm()         { return widthMm; }
     public Integer getDepthMm()         { return depthMm; }
