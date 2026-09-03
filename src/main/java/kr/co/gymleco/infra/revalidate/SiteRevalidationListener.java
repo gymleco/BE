@@ -36,10 +36,10 @@ public class SiteRevalidationListener {
                 .uri(config.url())
                 .header("Authorization", "Bearer " + config.token())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("paths", event.paths()))
+                .body(Map.of("paths", event.paths(), "tags", event.tags()))
                 .retrieve()
                 .toBodilessEntity();
-            log.info("사이트 재검증 완료: {}", event.paths());
+            log.info("사이트 재검증 완료: paths={} tags={}", event.paths(), event.tags());
         }catch (Exception e){
             log.error("사이트 재검증 실패. path={} 사유 ={} ", event.paths(), e.getMessage());
         }

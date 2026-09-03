@@ -6,6 +6,7 @@ import kr.co.gymleco.service.admin.BannerNotFoundException;
 import kr.co.gymleco.service.admin.InquiryNotFoundException;
 import kr.co.gymleco.service.admin.ProductNotFoundException;
 import kr.co.gymleco.service.admin.SupportNotFoundException;
+import kr.co.gymleco.service.admin.UnknownSettingKeyException;
 import kr.co.gymleco.service.admin.UsedItemNotFoundException;
 import kr.co.gymleco.support.image.InvalidImageException;
 import org.springframework.http.HttpStatus;
@@ -104,6 +105,16 @@ public class AdminApiExceptionHandler {
         return "값의 형식이 올바르지 않습니다.";
     }
 
+    /*
+     * 정의되지 않은 설정 키. 이건 «서버 오류» 가 아니라 «보낸 값이 틀림» 이다.
+     * 안 잡으면 전역 catch-all 로 떨어져 500 이 나가고, 관리 화면은
+     * "서버에 문제가 생겼습니다" 라고만 말하게 된다.
+     */
+    @ExceptionHandler(UnknownSettingKeyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> unknownSettingKey(UnknownSettingKeyException e){
+        return Map.of("code", "UNKNOWN_SETTING_KEY", "message", e.getMessage());
+    }
     @ExceptionHandler(DuplicateSlugException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> duplicateSlug(DuplicateSlugException e){return Map.of("code", "DUPLICATE_SLUG", "message", e.getMessage());}
