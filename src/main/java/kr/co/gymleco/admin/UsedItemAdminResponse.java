@@ -12,7 +12,7 @@ public record UsedItemAdminResponse(
     Short yearMade,
     Integer priceKrw,
     String description,
-    String thubnailKey,
+    String thumbnailKey,
     String status,
     short quantity,
     int sortOrder,

@@ -72,8 +72,26 @@ public class Product {
     }
     public void applyDimensions(BigDecimal footprintM2, Integer widthMm,
                                 Integer depthMm, Integer heightMm, BigDecimal weightKg) {
-        if (type.requiresFootprint() && footprintM2 == null) {
-            throw new IllegalArgumentException("기구는 설치 면적이 필요합니다.");
+        /*
+         * DB 의 ck_product_dimensions 와 같은 규칙을 여기서도 본다.
+         *
+         * 제약만 믿고 두면 빠진 칸이 500 으로 튀어나온다. 관리 화면에는
+         * "서버에 문제가 생겼습니다" 라고만 뜨고, 정작 세로를 안 적었다는
+         * 사실은 아무도 모른다. 어느 칸이 비었는지 이름을 붙여 400 으로 돌려준다.
+         *
+         * 기구만 치수를 강제하는 이유는 «설치 면적» 이 이 사이트의 핵심
+         * 정보이기 때문이다. 부품 · 악세사리는 없어도 된다.
+         */
+        if (type.requiresFootprint()) {
+            List<String> missing = new ArrayList<>();
+            if (footprintM2 == null) missing.add("설치 면적");
+            if (widthMm == null)     missing.add("가로");
+            if (depthMm == null)     missing.add("세로");
+            if (heightMm == null)    missing.add("높이");
+            if (!missing.isEmpty()) {
+                throw new IllegalArgumentException(
+                    "기구는 " + String.join(" · ", missing) + " 이(가) 필요합니다.");
+            }
         }
         this.footprintM2 = footprintM2;
         this.widthMm = widthMm;
