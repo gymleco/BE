@@ -112,7 +112,9 @@ public class BannerAdminService {
 
         auditLogger.contentChanged(actor, AuditAction.SECTION_MEDIA_UPDATED,
             "SectionMedia", null, key, ip);
-        events.publishEvent(new ContentChangedEvent(List.of("/")));
+        // 구역 이미지도 같다 — 경로만 비우면 fetch 캐시가 옛 사진을 붙들고 있다
+        events.publishEvent(
+            new ContentChangedEvent(List.of("/"), List.of("section-media")));
     }
 
     /* ── 내부 ────────────────────────────────────────────── */
@@ -138,6 +140,14 @@ public class BannerAdminService {
             case ACCESSORY -> "/accessories";
             case CENTER    -> "/centers";
         };
-        events.publishEvent(new ContentChangedEvent(List.of(path)));
+        /*
+         * 경로와 «태그» 를 함께 보낸다.
+         *
+         * 경로만 보내면 그 화면의 라우트 캐시는 비워지는데, 정작 옛 배너를
+         * 붙들고 있는 것은 fetch 캐시(5분)라 다시 만들어도 같은 값이 나온다.
+         * 태그를 끊어야 실제로 새 배너를 가지러 간다.
+         */
+        events.publishEvent(
+            new ContentChangedEvent(List.of(path), List.of("banners")));
     }
 }
