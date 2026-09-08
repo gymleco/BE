@@ -40,6 +40,14 @@ public class Product {
     private String thumbnailKey;
     @Column(name = "cutout_key", length = 255)
     private String cutoutKey;
+    /**
+     * 본사 모델번호 — 제품 «종류» 의 식별자다. 일련번호가 아니다.
+     *
+     * 문자열이다. 확인된 것만 「350」 「116」 「Gi-020」 「028028」 로 형식이
+     * 섞여 있고, 정수로 잡으면 앞자리 0 이 사라져 다른 번호가 된다.
+     */
+    @Column(name = "model_code", length = 40)
+    private String modelCode;
     @Column(name = "sort_order", nullable = false)
     private int sortOrder = 0;
     @Column(nullable = false)
@@ -125,6 +133,17 @@ public class Product {
         this.cutoutKey = cutoutKey;
         touch();
     }
+    /**
+     * 모델번호.
+     *
+     * ★ 빈 문자열이 아니라 null 로 눕힌다.
+     *   V8 의 유일 인덱스가 `WHERE model_code IS NOT NULL` 이라, 빈 문자열로
+     *   두면 «번호를 아직 못 받은 제품» 끼리 서로 중복이 되어 저장이 막힌다.
+     */
+    public void changeModelCode(String modelCode) {
+        this.modelCode = (modelCode == null || modelCode.isBlank()) ? null : modelCode.trim();
+        touch();
+    }
     /** 대표 이미지. 업로드 파이프라인이 만든 스토리지 키를 받는다. */
     public void changeThumbnail(String thumbnailKey) {
         this.thumbnailKey = thumbnailKey;
@@ -159,6 +178,7 @@ public class Product {
     public String getSummary()          { return summary; }
     public String getDescription()      { return description; }
     public String getCutoutKey()        { return cutoutKey; }
+    public String getModelCode()        { return modelCode; }
     public BigDecimal getFootprintM2()  { return footprintM2; }
     public Integer getWidthMm()         { return widthMm; }
     public Integer getDepthMm()         { return depthMm; }
