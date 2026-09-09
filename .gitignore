@@ -52,3 +52,8 @@ logs/
 *.dump
 *.sql.gz
 gitleaks-report.json
+
+# 개발용 스냅숏 — 시연 자료(제품 사진·DB 덤프)라 저장소에 넣지 않는다.
+# 만드는 방법은 docker/dev-snapshot/export.sh 에 있다.
+# 앞에 / 를 붙여 루트에만 건다 — 없으면 스크립트가 든 docker/dev-snapshot 까지 잡힌다.
+/dev-snapshot/
