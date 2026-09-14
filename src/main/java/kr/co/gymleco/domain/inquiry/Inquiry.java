@@ -21,6 +21,10 @@ public class Inquiry {
     /** HMAC-SHA256(정규화된 번호)*/
     @Column(name = "phone_blind_index")
     private byte[] phoneBlindIndex;
+    @Column(name = "reference_no", nullable = false, updatable = false, length = 20)
+    private String referenceNo;
+    @Column(name = "duplicate_of_id")
+    private Long duplicateOfId;
     @Column(length = 160)
     private String email;
     @Column(length = 120)
@@ -58,20 +62,25 @@ public class Inquiry {
     protected Inquiry(){}
     public static Inquiry receive(
         InquiryType type,
+        String referenceNo,
         String name,
         String phoneEncrypted,
         byte[] phoneBlindIndex,
         Instant consentAt,
         Duration retention
-    ) {
+    ){
         if (consentAt == null) {
             throw new IllegalArgumentException("동의 없이 문의를 저장할 수 없습니다.");
         }
         if (phoneEncrypted == null || phoneEncrypted.isBlank()) {
             throw new IllegalArgumentException("연락처가 암호화되지 않았습니다.");
         }
+        if (referenceNo == null || referenceNo.isBlank()) {
+            throw new IllegalArgumentException("접수번호 없이 문의를 저장할 수 없습니다.");
+        }
         Inquiry inquiry = new Inquiry();
         inquiry.type = type;
+        inquiry.referenceNo = referenceNo;
         inquiry.name = name;
         inquiry.phoneEncrypted = phoneEncrypted;
         inquiry.phoneBlindIndex = phoneBlindIndex;
@@ -100,6 +109,11 @@ public class Inquiry {
         if (ids != null) {
             this.productIds.addAll(ids);
         }
+    }
+    public void markDuplicateOf(Inquiry earlier) {
+        this.duplicateOfId = (earlier.duplicateOfId != null)
+            ? earlier.duplicateOfId
+            : earlier.id;
     }
     public void changeStatus(InquiryStatus status) {
         this.status = status;
@@ -144,4 +158,7 @@ public class Inquiry {
     public Set<Long> getProductIds()       { return Set.copyOf(productIds); }
     public Instant getCreatedAt()          { return createdAt; }
     public String getSpaceInfo()           { return spaceInfo; }
+    public String getReferenceNo()         { return referenceNo;}
+    public Long getDuplicateOfId()         { return duplicateOfId;}
+    public boolean isDuplicate()           { return duplicateOfId != null;}
 }

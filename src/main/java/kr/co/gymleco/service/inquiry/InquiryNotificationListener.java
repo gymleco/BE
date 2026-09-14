@@ -37,18 +37,32 @@ public class InquiryNotificationListener {
 
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(to);
-        mail.setSubject("[짐레코] 새 문의 — " + event.type().label());
-        mail.setText("""
+        // 제목에 번호를 넣는다. 카톡으로 «[접수번호 GL-...]» 가 오면
+        // 메일함에서 그 번호로 바로 찾을 수 있어야 한다.
+        String subject = event.isRepeat()
+            ? "[짐레코] 재문의 " + event.referenceNo()
+                + " (앞 접수 " + event.originalReferenceNo() + ") — " + event.type().label()
+            : "[짐레코] 새 문의 " + event.referenceNo() + " — " + event.type().label();
+        mail.setSubject(subject);
+
+        String repeatNote = event.isRepeat()
+            ? "※ 같은 연락처로 " + event.originalReferenceNo()
+                + " 가 먼저 접수돼 있습니다. 같은 분이니 한 번만 연락해 주세요.\n\n"
+            : "";
+
+        mail.setText(repeatNote + """
                 새 문의가 접수되었습니다.
 
-                유형   : %s
-                이름   : %s
-                업체   : %s
-                지역   : %s
+                접수번호 : %s
+                유형     : %s
+                이름     : %s
+                업체     : %s
+                지역     : %s
 
                 연락처와 상세 내용은 관리자 화면에서 확인해 주세요.
                 (보안상 메일에는 연락처를 포함하지 않습니다)
                 """.formatted(
+            event.referenceNo(),
             event.type().label(),
             event.maskedName(),
             nullToDash(event.company()),

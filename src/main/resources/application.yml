@@ -180,6 +180,9 @@ gymleco:
     retention-days: ${INQUIRY_RETENTION_DAYS:365}
     # 문의 폼 남용 방지 (§11 5위)
     rate-limit-per-hour: ${INQUIRY_RATE_LIMIT_PER_HOUR:5}
+    # 같은 연락처로 이 시간 안에 다시 들어온 문의는 앞 건에 «묶는다» (버리지 않는다).
+    # 담당자가 한 고객을 두 고객으로 알고 두 번 전화하는 일을 막는다. (V10)
+    duplicate-window-hours: ${INQUIRY_DUPLICATE_WINDOW_HOURS:24}
     notify-to: ${INQUIRY_NOTIFY_TO:}
 
   cors:

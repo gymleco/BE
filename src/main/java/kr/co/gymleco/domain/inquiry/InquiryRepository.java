@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     Page<Inquiry> findByStatusOrderByCreatedAtDesc(InquiryStatus status, Pageable pageable);
@@ -39,4 +40,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
                                       @Param("from") Instant from,
                                       @Param("to") Instant to,
                                       Pageable pageable);
+    boolean existsByReferenceNo(String referenceNo);
+    Optional<Inquiry> findFirstByPhoneBlindIndexAndCreatedAtAfterOrderByCreatedAtDesc(byte[] phoneBlindIndex, Instant since);
 }

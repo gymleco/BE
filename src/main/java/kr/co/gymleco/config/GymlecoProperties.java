@@ -54,10 +54,16 @@ public record GymlecoProperties(
     public record Inquiry(
         @Positive int retentionDays,
         @Positive int rateLimitPerHour,
-        String notifyTo
+        String notifyTo,
+        /** 같은 연락처로 이 시간 안에 다시 들어온 문의는 앞 건에 묶는다 (V10) */
+        @Positive int duplicateWindowHours
     ) {
         public Duration retention() {
             return Duration.ofDays(retentionDays);
+        }
+
+        public Duration duplicateWindow() {
+            return Duration.ofHours(duplicateWindowHours);
         }
     }
 

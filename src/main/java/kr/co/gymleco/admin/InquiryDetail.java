@@ -7,6 +7,10 @@ import java.util.Set;
 
 public record InquiryDetail(
     Long id,
+    /** 접수번호 — 카카오톡으로 온 번호와 맞춰 보는 값 (V10) */
+    String referenceNo,
+    /** 재문의면 같은 연락처의 원래 건 id, 아니면 null (V10) */
+    Long duplicateOfId,
     String type,
     String name,
     String phone,
@@ -26,6 +30,8 @@ public record InquiryDetail(
     public static InquiryDetail of(Inquiry inquiry, String decryptedPhone) {
         return new InquiryDetail(
             inquiry.getId(),
+            inquiry.getReferenceNo(),
+            inquiry.getDuplicateOfId(),
             inquiry.getType().label(),
             inquiry.getName(),
             decryptedPhone,

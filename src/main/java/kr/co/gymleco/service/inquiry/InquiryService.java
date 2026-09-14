@@ -15,9 +15,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import kr.co.gymleco.domain.inquiry.ReferenceNumbers;
+import java.util.Optional;
 
 @Service
 public class InquiryService {
+    private static final int REFERENCE_ATTEMPTS = 5;
     private final InquiryRepository inquiryRepository;
     private final ProductRepository productRepository;
     private final PiiEncryptor piiEncryptor;
@@ -38,7 +41,7 @@ public class InquiryService {
         this.config = properties.inquiry();
     }
     @Transactional
-    public Long receive(InquiryCommand command) {
+    public InquiryReceipt receive(InquiryCommand command) {
         Instant now = Instant.now();
         if (command.sourceIp() != null && !command.sourceIp().isBlank()) {
             long recent = inquiryRepository.countRecentByIp(
@@ -66,6 +69,7 @@ public class InquiryService {
 
         Inquiry inquiry = Inquiry.receive(
             command.type(),
+            newReferenceNo(now),
             command.name().trim(),
             encryptedPhone,
             blindIndex,
@@ -96,12 +100,55 @@ public class InquiryService {
                 inquiry.linkProducts(new HashSet<>(ids));
             }
         }
+
+        /*
+         * 재문의 묶기 — 같은 연락처로 최근에 들어온 문의가 있으면 그 건에 묶는다.
+         *
+         * ★ 버리지 않는다. 두 번째에 적은 내용(다른 제품, 바뀐 평수)이 사라진다.
+         * ★ 앞 건의 번호를 돌려주지 않는다. 그러면 남의 전화번호를 넣어 보는 것만으로
+         *   그 사람의 접수번호가 튀어나오는 «조회 통로» 가 된다.
+         *   누구에게나 새 번호를 주고, 묶음은 관리 화면에서만 보인다.
+         */
+        Optional<Inquiry> earlier = inquiryRepository
+            .findFirstByPhoneBlindIndexAndCreatedAtAfterOrderByCreatedAtDesc(
+                blindIndex, now.minus(config.duplicateWindow()));
+        earlier.ifPresent(inquiry::markDuplicateOf);
+
         Inquiry saved = inquiryRepository.save(inquiry);
+
         eventPublisher.publishEvent(new InquiryReceivedEvent(
-            saved.getId(), saved.getType(), saved.maskedName(),
+            saved.getId(),
+            saved.getReferenceNo(),
+            earlier.map(this::rootReferenceNo).orElse(null),
+            saved.getType(), saved.maskedName(),
             saved.getCompany(), saved.getRegion()));
 
-        return saved.getId();
+        return new InquiryReceipt(saved.getReferenceNo());
+    }
+
+    /**
+     * 겹치지 않는 접수번호를 뽑는다.
+     * 하루에 92만 개 넘는 조합이라 겹칠 일은 드물지만, 드물다는 것과
+     * 없다는 것은 다르다. 겹치면 다시 뽑는다.
+     */
+    private String newReferenceNo(Instant now) {
+        for (int i = 0; i < REFERENCE_ATTEMPTS; i++) {
+            String candidate = ReferenceNumbers.next(now);
+            if (!inquiryRepository.existsByReferenceNo(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("접수번호를 만들지 못했습니다.");
+    }
+
+    /** 묶음의 원래 건 번호. 원래 건이 이미 파기됐으면 가까운 건의 번호로 대신한다. */
+    private String rootReferenceNo(Inquiry earlier) {
+        if (earlier.getDuplicateOfId() == null) {
+            return earlier.getReferenceNo();
+        }
+        return inquiryRepository.findById(earlier.getDuplicateOfId())
+            .map(Inquiry::getReferenceNo)
+            .orElse(earlier.getReferenceNo());
     }
     @Transactional(readOnly = true)
     public List<Inquiry> searchByPhone(String rawPhone) {
