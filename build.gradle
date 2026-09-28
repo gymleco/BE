@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.1.0'
+    id 'org.springframework.boot' version '4.1.1'
 }
 
 group = 'kr.co.gymleco'
@@ -36,7 +36,7 @@ repositories {
  * 버전을 적은 것들은 BOM 밖에 있는 것뿐이다.
  */
 ext {
-    springBootVersion = '4.1.0'
+    springBootVersion = '4.1.1'
     awsSdkVersion = '2.51.3'
     htmlSanitizerVersion = '20260313.1'
     thumbnailatorVersion = '0.4.21'
